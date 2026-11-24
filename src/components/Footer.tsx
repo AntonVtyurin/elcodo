@@ -1,10 +1,13 @@
 import { Shield } from 'lucide-react';
+import { SITE_CONFIG, formatRequisites } from '@/config/site';
 
 interface FooterProps {
   onOpenPrivacy: () => void;
 }
 
 export default function Footer({ onOpenPrivacy }: FooterProps) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="border-t border-white/[0.08] py-12">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -12,21 +15,26 @@ export default function Footer({ onOpenPrivacy }: FooterProps) {
           <span className="inline-flex items-center gap-2">
             <Shield className="h-4 w-4 text-amber-400" />
             <span className="font-mono text-sm font-bold tracking-[0.22em] text-white">
-              ELCODO
+              {SITE_CONFIG.brand.toUpperCase()}
             </span>
           </span>
 
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-500">
-            © 2026 Elcodo (elcodo.ru) • Инженерный консалтинг и обслуживание
-            электрохозяйства в СПб
+            © {currentYear} {SITE_CONFIG.brand} (elcodo.ru) • Инженерный
+            консалтинг и обслуживание электрохозяйства в СПб
           </p>
           <p className="font-mono text-sm text-zinc-400">
             Почта:{' '}
-            <a href="mailto:elcodo@bk.ru" className="text-amber-400 transition-colors hover:text-amber-300">
-              elcodo@bk.ru
+            <a
+              href={`mailto:${SITE_CONFIG.email}`}
+              className="text-amber-400 transition-colors hover:text-amber-300"
+            >
+              {SITE_CONFIG.email}
             </a>
           </p>
-          <p className="font-mono text-xs text-zinc-600">Реквизиты: [ФИО / ИНН]</p>
+          <p className="font-mono text-xs text-zinc-600">
+            Реквизиты: {formatRequisites()}
+          </p>
 
           <button
             type="button"

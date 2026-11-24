@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { SITE_CONFIG, formatRequisites } from '@/config/site';
 
 interface PrivacyModalProps {
   open: boolean;
@@ -35,7 +36,9 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-extrabold text-white">Политика конфиденциальности</h2>
+          <h2 className="text-2xl font-extrabold text-white">
+            Политика конфиденциальности
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -56,10 +59,16 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
           <div>
             <h3 className="mb-2 font-bold text-white">1. Оператор</h3>
             <p>
-              Оператором персональных данных является: <span className="text-zinc-200">[ФИО]</span>,
-              ИНН: <span className="font-mono text-zinc-200">[ИНН]</span>. Контакт для обращений
-              по вопросам персональных данных: <span className="font-mono text-amber-400">elcodo@bk.ru</span>,
-              сайт: <span className="font-mono text-zinc-200">elcodo.ru</span>.
+              Оператором персональных данных является:{' '}
+              <span className="font-mono text-zinc-200">{formatRequisites()}</span>.
+              Контакт для обращений по вопросам персональных данных:{' '}
+              <a
+                href={`mailto:${SITE_CONFIG.email}`}
+                className="font-mono text-amber-400 hover:underline"
+              >
+                {SITE_CONFIG.email}
+              </a>
+              , сайт: <span className="font-mono text-zinc-200">elcodo.ru</span>.
             </p>
           </div>
           <div>
@@ -81,8 +90,9 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
           <div>
             <h3 className="mb-2 font-bold text-white">4. Правовые основания</h3>
             <p>
-              Согласие пользователя, выраженное деактивацией действий или отдельным согласием,
-              договоры, к стороной которых является субъект персональных данных, а также
+              Согласие пользователя, выраженное конклюдентными действиями (направлением
+              обращения в мессенджер или на электронную почту) либо отдельным согласием,
+              договоры, стороной которых является субъект персональных данных, а также
               законодательство РФ.
             </p>
           </div>
@@ -91,8 +101,8 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
             <p>
               Обработка осуществляется с использованием средств автоматизации и без них.
               Данные обрабатываются до достижения целей обработки либо до отзыва согласия
-              пользователем. Отзыв согласия оформляется в письменной форме на адрес
-              elcodo@bk.ru.
+              пользователем. Отзыв согласия оформляется в письменной форме на адрес{' '}
+              <span className="font-mono text-zinc-300">{SITE_CONFIG.email}</span>.
             </p>
           </div>
           <div>
@@ -100,7 +110,8 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
             <p>
               Пользователь имеет право получать сведения об обработке своих персональных данных,
               требовать их уточнения, блокирования или уничтожения, а также отозвать согласие
-              на обработку, направив обращение на elcodo@bk.ru.
+              на обработку, направив обращение на{' '}
+              <span className="font-mono text-zinc-300">{SITE_CONFIG.email}</span>.
             </p>
           </div>
           <div>
@@ -115,13 +126,9 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
             <h3 className="mb-2 font-bold text-white">8. Изменение политики</h3>
             <p>
               Оператор имеет право вносить изменения в настоящую Политику. Актуальная редакция
-              всегда размещена на этой странице.
+              всегда размещена на сайте по адресу elcodo.ru.
             </p>
           </div>
-          <p className="text-xs text-zinc-600">
-            [Шаблонный текст. Перед публикацией заполните плейсхолдеры ФИО и ИНН и при
-            необходимости согласуйте с юристом.]
-          </p>
         </div>
       </div>
     </div>
