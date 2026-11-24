@@ -1,18 +1,23 @@
 import { useState } from 'react';
-import { Send, Copy, Check, Mail } from 'lucide-react';
+import { Send, MessageSquare, Copy, Check, Mail } from 'lucide-react';
+import { SITE_CONFIG, getTelegramUrl, getMaxUrl } from '@/config/site';
 
 export default function Contact() {
   const [copied, setCopied] = useState(false);
 
   const copyEmail = async () => {
     try {
-      await navigator.clipboard.writeText('elcodo@bk.ru');
+      await navigator.clipboard.writeText(SITE_CONFIG.email);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      window.location.href = 'mailto:elcodo@bk.ru';
+      window.location.href = `mailto:${SITE_CONFIG.email}`;
     }
   };
+
+  const telegramLink = getTelegramUrl(
+    'Здравствуйте! Хочу обсудить обслуживание электрохозяйства или провести аудит объекта.'
+  );
 
   return (
     <section className="relative py-20 lg:py-28">
@@ -27,40 +32,51 @@ export default function Contact() {
             Готовы навести порядок в электрохозяйстве вашего офиса?
           </h2>
           <p className="relative mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Пришлите фото вашего электрощита или план помещения в Telegram или на почту —
-            проведем экспресс-оценку и подберем формат обслуживания.
+            Пришлите фото вашего электрощита или план помещения в MAX, Telegram или на
+            почту — проведем экспресс-оценку и подберем формат обслуживания.
           </p>
 
-          <div className="relative mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="relative mt-9 flex flex-col flex-wrap items-center justify-center gap-3.5 sm:flex-row">
             <a
-              href="https://t.me"
+              href={getMaxUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-7 py-4 text-base font-bold text-[#090A0F] shadow-[0_8px_32px_rgba(245,158,11,0.35)] transition-all hover:bg-amber-400 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-4 text-base font-bold text-[#090A0F] shadow-[0_8px_32px_rgba(245,158,11,0.35)] transition-all hover:bg-amber-400 sm:w-auto"
             >
-              <Send className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" />
+              Написать в MAX
+            </a>
+
+            <a
+              href={telegramLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-6 py-4 text-base font-semibold text-zinc-100 transition-all hover:border-amber-500/40 hover:text-amber-400 sm:w-auto"
+            >
+              <Send className="h-5 w-5 text-amber-400" />
               Написать в Telegram
             </a>
+
             <button
               type="button"
               onClick={copyEmail}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-7 py-4 text-base font-semibold text-zinc-100 transition-all hover:border-amber-500/40 hover:text-amber-400 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-6 py-4 text-base font-semibold text-zinc-100 transition-all hover:border-amber-500/40 hover:text-amber-400 sm:w-auto"
             >
               {copied ? (
                 <Check className="h-5 w-5 text-emerald-400" />
               ) : (
                 <Copy className="h-5 w-5" />
               )}
-              {copied ? 'Адрес скопирован' : 'Скопировать elcodo@bk.ru'}
+              {copied ? 'Адрес скопирован' : `Скопировать ${SITE_CONFIG.email}`}
             </button>
           </div>
 
           <a
-            href="mailto:elcodo@bk.ru"
+            href={`mailto:${SITE_CONFIG.email}`}
             className="relative mt-6 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-amber-400"
           >
             <Mail className="h-4 w-4" />
-            elcodo@bk.ru
+            {SITE_CONFIG.email}
           </a>
 
           {/*
