@@ -1,5 +1,10 @@
-import { Shield } from 'lucide-react';
-import { SITE_CONFIG, formatRequisites } from '@/config/site';
+import { Shield, MessageCircle, Send } from 'lucide-react';
+import {
+  SITE_CONFIG,
+  formatRequisites,
+  getMaxUrl,
+  getTelegramUrl,
+} from '@/config/site';
 
 interface FooterProps {
   onOpenPrivacy: () => void;
@@ -19,32 +24,53 @@ export default function Footer({ onOpenPrivacy }: FooterProps) {
             </span>
           </span>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-zinc-500">
-            © {currentYear} {SITE_CONFIG.brand} (elcodo.ru) • Инженерный
-            консалтинг и обслуживание электрохозяйства в СПб
+          <p className="max-w-2xl text-sm leading-relaxed text-zinc-300">
+            © {currentYear} {SITE_CONFIG.brand} ({SITE_CONFIG.domain}) • Инженерное
+            обслуживание электроустановок в СПб
           </p>
-          <p className="font-mono text-sm text-zinc-400">
-            Почта:{' '}
+
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
             <a
-              href={`mailto:${SITE_CONFIG.email}`}
-              className="text-amber-400 transition-colors hover:text-amber-300"
+              href={getMaxUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Написать в MAX
+            </a>
+            <span className="text-zinc-600">•</span>
+            <a
+              href={getTelegramUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-medium text-zinc-300 transition-colors hover:text-white"
+            >
+              <Send className="h-3.5 w-3.5 text-zinc-400" />
+              Telegram
+            </a>
+            <span className="text-zinc-600">•</span>
+            <a
+              href={'mailto:' + SITE_CONFIG.email}
+              className="font-mono text-zinc-300 transition-colors hover:text-amber-400"
             >
               {SITE_CONFIG.email}
             </a>
-          </p>
-          <p className="font-mono text-xs text-zinc-600">
+          </div>
+
+          <p className="font-mono text-xs text-zinc-400">
             Реквизиты: {formatRequisites()}
           </p>
 
           <button
             type="button"
             onClick={onOpenPrivacy}
-            className="text-sm text-zinc-400 underline decoration-zinc-700 underline-offset-4 transition-colors hover:text-amber-400"
+            className="text-sm text-zinc-300 underline decoration-zinc-600 underline-offset-4 transition-colors hover:text-amber-400"
           >
             Политика конфиденциальности
           </button>
 
-          <p className="max-w-xl text-xs leading-relaxed text-zinc-600">
+          <p className="max-w-xl text-xs leading-relaxed text-zinc-400">
             Информация на сайте не является публичной офертой (ст. 437 ГК РФ).
           </p>
         </div>
