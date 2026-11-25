@@ -123,7 +123,7 @@ export default function Hero() {
               className="inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-amber-400"
             >
               <Send className="h-4 w-4 text-zinc-500" />
-              Или напишите в Telegram
+              Написать в Telegram
             </a>
           </div>
         </div>
