@@ -48,7 +48,7 @@ export default function Header() {
               {SITE_CONFIG.brand.toUpperCase()}
             </span>
             <span className="block text-[11px] font-medium tracking-wide text-zinc-400">
-              Инженерный консалтинг СПб
+              Инженерное сопровождение СПб
             </span>
           </span>
         </a>
