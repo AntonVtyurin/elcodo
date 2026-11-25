@@ -1,4 +1,4 @@
-import { Shield, MessageCircle, Send } from 'lucide-react';
+import { Zap, MessageCircle, Send } from 'lucide-react';
 import {
   SITE_CONFIG,
   formatRequisites,
@@ -17,12 +17,14 @@ export default function Footer({ onOpenPrivacy }: FooterProps) {
     <footer className="border-t border-white/[0.08] py-12">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <span className="inline-flex items-center gap-2">
-            <Shield className="h-4 w-4 text-amber-400" />
+          <a href="#" className="inline-flex items-center gap-2.5">
+            <span className="grid h-7 w-7 place-items-center rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-400">
+              <Zap className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </span>
             <span className="font-mono text-sm font-bold tracking-[0.22em] text-white">
               {SITE_CONFIG.brand.toUpperCase()}
             </span>
-          </span>
+          </a>
 
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-300">
             © {currentYear} {SITE_CONFIG.brand} ({SITE_CONFIG.domain}) • Инженерное
