@@ -35,7 +35,7 @@ export function formatRequisites(req: Requisites = SITE_CONFIG.requisites): stri
 }
 
 export function getTelegramUrl(prefillText?: string): string {
-  const base = `https://t.me{SITE_CONFIG.messengers.telegramUsername}`;
+  const base = `https://t.me/${SITE_CONFIG.messengers.telegramUsername}`;
   if (!prefillText) return base;
   return `${base}?text=${encodeURIComponent(prefillText)}`;
 }
