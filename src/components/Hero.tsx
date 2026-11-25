@@ -120,9 +120,9 @@ export default function Hero() {
               href={telegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-200"
+              className="inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-amber-400"
             >
-              <Send className="h-3.5 w-3.5 text-zinc-500" />
+              <Send className="h-4 w-4 text-zinc-500" />
               Или напишите в Telegram
             </a>
           </div>
@@ -132,11 +132,15 @@ export default function Hero() {
           {FEATURES.map(({ icon: Icon, title, sub }) => (
             <div
               key={title}
-              className="glass-card rounded-2xl p-5 transition-colors duration-300 hover:border-amber-500/30"
+              className="glass-card rounded-2xl p-6 transition-colors duration-300 hover:border-amber-500/30"
             >
-              <Icon className="h-6 w-6 text-amber-400" strokeWidth={1.8} />
-              <p className="mt-4 text-sm font-bold leading-snug text-white">{title}</p>
-              <p className="mt-1 text-[13px] text-zinc-400">{sub}</p>
+              <Icon className="h-7 w-7 text-amber-400" strokeWidth={1.8} />
+              <p className="mt-4 text-base font-bold leading-snug text-white">
+                {title}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">
+                {sub}
+              </p>
             </div>
           ))}
         </div>
