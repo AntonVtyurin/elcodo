@@ -1,6 +1,22 @@
-import { Send, MapPin, UserCheck, FileText, Clock, ArrowDown } from 'lucide-react';
+import {
+  MessageCircle,
+  Send,
+  MapPin,
+  UserCheck,
+  FileText,
+  Clock,
+  ArrowDown,
+  type LucideIcon,
+} from 'lucide-react';
+import { getMaxUrl, getTelegramUrl } from '@/config/site';
 
-const FEATURES = [
+interface FeatureItem {
+  icon: LucideIcon;
+  title: string;
+  sub: string;
+}
+
+const FEATURES: readonly FeatureItem[] = [
   {
     icon: UserCheck,
     title: 'Один закрепленный инженер',
@@ -13,8 +29,8 @@ const FEATURES = [
   },
   {
     icon: MapPin,
-    title: 'Гибкий формат: ФЛ / СЗ / ИП',
-    sub: 'и безнал для юрлиц',
+    title: 'Плательщик НПД',
+    sub: 'безнал для юрлиц без НДС',
   },
   {
     icon: Clock,
@@ -24,8 +40,16 @@ const FEATURES = [
 ];
 
 export default function Hero() {
+  const maxUrl = getMaxUrl();
+  const telegramUrl = getTelegramUrl(
+    'Здравствуйте! Интересует аудит и обслуживание электрики офиса.'
+  );
+
   return (
-    <section id="top" className="relative overflow-hidden pt-36 pb-16 lg:pt-44 lg:pb-24">
+    <section
+      id="top"
+      className="relative overflow-hidden pb-16 pt-36 lg:pb-24 lg:pt-44"
+    >
       {/* Атмосферный инженерный фон */}
       <div
         aria-hidden
@@ -57,30 +81,30 @@ export default function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/[0.08] px-4 py-1.5 font-mono text-[11px] font-medium tracking-[0.18em] text-amber-400">
             <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-amber-400" />
-            ПЕРСОНАЛЬНЫЙ ГЛАВНЫЙ ЭНЕРГЕТИК И ЦИФРОВИЗАЦИЯ • СПБ
+            ПЕРСОНАЛЬНЫЙ ИНЖЕНЕР-ЭЛЕКТРИК И ЦИФРОВИЗАЦИЯ • СПБ
           </span>
 
           <h1 className="mt-7 text-balance text-4xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
-            Персональный инженер-энергетик и цифровой паспорт электрохозяйства{' '}
+            Персональный инженер-электрик и цифровой паспорт электрохозяйства{' '}
             <span className="text-amber-400">для вашего офиса</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-zinc-400 sm:text-lg">
             Абонентское обслуживание по подписке, ведение документации по ЭХ, быстрый
             тепловизионный аудит без лишней бюрократии и интерактивные SVG-карты помещений
-            с заявками по QR-коду. Ваш объект ведет один закрепленный инженер, который
-            знает каждый автомат в вашем щите.
+            с заявками по QR-коду. Ваш объект ведет один закрепленный инженер-электрик,
+            который знает каждый автомат в вашем щите.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
-              href="https://t.me"
+              href={maxUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-7 py-4 text-base font-bold text-[#090A0F] shadow-[0_8px_32px_rgba(245,158,11,0.35)] transition-all hover:bg-amber-400 hover:shadow-[0_8px_40px_rgba(245,158,11,0.5)] sm:w-auto"
             >
-              <Send className="h-5 w-5" />
-              Запросить аудит в Telegram
+              <MessageCircle className="h-5 w-5" />
+              Запросить аудит в MAX
             </a>
             <a
               href="#demo"
@@ -88,6 +112,18 @@ export default function Hero() {
             >
               Попробовать демо SVG-карты
               <ArrowDown className="h-4 w-4" />
+            </a>
+          </div>
+
+          <div className="mt-4">
+            <a
+              href={telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-200"
+            >
+              <Send className="h-3.5 w-3.5 text-zinc-500" />
+              Или напишите в Telegram
             </a>
           </div>
         </div>
