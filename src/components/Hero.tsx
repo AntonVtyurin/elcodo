@@ -24,8 +24,8 @@ const FEATURES: readonly FeatureItem[] = [
   },
   {
     icon: FileText,
-    title: 'Цифровой паспорт щита',
-    sub: 'и SVG-схема объекта',
+    title: 'Документация',
+    sub: 'расчеты и схемы',
   },
   {
     icon: MapPin,
@@ -81,11 +81,11 @@ export default function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/[0.08] px-4 py-1.5 font-mono text-[11px] font-medium tracking-[0.18em] text-amber-400">
             <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-amber-400" />
-            ПЕРСОНАЛЬНЫЙ ИНЖЕНЕР-ЭЛЕКТРИК И ЦИФРОВИЗАЦИЯ • СПБ
+            ИНДИВИДУАЛЬНЫЙ ПОДХОД • СПБ
           </span>
 
           <h1 className="mt-7 text-balance text-4xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
-            Персональный инженер-электрик и цифровой паспорт электрохозяйства{' '}
+            Персональный инженер-электрик и порядок в электрохозяйстве{' '}
             <span className="text-amber-400">для вашего офиса</span>
           </h1>
 
