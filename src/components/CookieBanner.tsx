@@ -3,7 +3,11 @@ import { Cookie } from 'lucide-react';
 
 const KEY = 'elcodo-cookie-consent';
 
-export default function CookieBanner() {
+interface CookieBannerProps {
+  onOpenPrivacy: () => void;
+}
+
+export default function CookieBanner({ onOpenPrivacy }: CookieBannerProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -29,22 +33,27 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fade-up fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl rounded-2xl border border-white/[0.08] bg-[#11131C]/95 p-5 shadow-[0_16px_48px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2">
+    <div
+      role="region"
+      aria-label="Уведомление об использовании файлов cookie"
+      className="fade-up fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl rounded-2xl border border-white/15 bg-[#11131C]/95 p-5 shadow-[0_16px_48px_rgba(0,0,0,0.65)] backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
+    >
       <div className="flex items-start gap-4">
         <Cookie className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
-        <p className="text-sm leading-relaxed text-zinc-400">
-          Мы используем файлы cookie, чтобы сайт работал корректно. Продолжая пользоваться
-          сайтом, вы соглашаетесь с этим.
+        <p className="text-sm leading-relaxed text-zinc-200">
+          Мы используем технические файлы cookie и локальное хранилище браузера для
+          корректной работы интерфейса. Продолжая пользоваться сайтом, вы соглашаетесь с
+          условиями обработки данных.
         </p>
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="text-xs text-zinc-500 underline decoration-zinc-700 underline-offset-2 hover:text-zinc-300"
+        <button
+          type="button"
+          onClick={onOpenPrivacy}
+          className="text-xs font-medium text-zinc-300 underline decoration-zinc-500 underline-offset-4 transition-colors hover:text-amber-400"
         >
-          Подробнее
-        </a>
+          Подробнее в Политике
+        </button>
         <button
           type="button"
           onClick={accept}

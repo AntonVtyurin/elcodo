@@ -31,7 +31,7 @@ export default function App() {
         <Contact />
       </main>
       <Footer onOpenPrivacy={() => setPrivacyOpen(true)} />
-      <CookieBanner />
+      <CookieBanner onOpenPrivacy={() => setPrivacyOpen(true)} />
       <PrivacyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
