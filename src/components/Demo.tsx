@@ -12,152 +12,29 @@ import {
   CalendarClock,
   Siren,
   ClipboardList,
+  MessageSquarePlus,
+  Search,
+  X,
+  ChevronDown,
 } from 'lucide-react';
 import { getMaxUrl, getTelegramUrl } from '../config/site';
+import {
+  OBJECT_INFO,
+  ROOM_CIRCUITS,
+  SYMPTOMS,
+  SymptomId,
+  TIME_SLOTS,
+  TaskItem,
+  VisitType,
+} from '../data/qrDemoData';
 
-type VisitType = 'planned' | 'emergency';
-type SymptomId = 'light' | 'sockets' | 'spark' | 'breaker';
+const [DEFAULT_TIME_SLOT] = TIME_SLOTS;
+const [DEFAULT_ROOM] = ROOM_CIRCUITS;
+const [DEFAULT_SYMPTOM] = SYMPTOMS;
 
-interface LineSpec {
-  breaker: string;
-  cable: string;
-  description: string;
-}
-
-interface RoomCircuit {
-  id: string;
-  roomName: string;
-  shield: string;
-  shieldLocation: string;
-  lightLine: LineSpec;
-  powerLine: LineSpec;
-}
-
-interface TaskItem {
-  uid: string;
-  roomId: string;
-  roomName: string;
-  symptomId: SymptomId;
-  symptomLabel: string;
-  urgent: boolean;
-  shield: string;
-  breaker: string;
-  cable: string;
-}
-
-const OBJECT_INFO = {
-  name: 'Офис БЦ «Петровский», 3 этаж',
-  lastAudit: 'ТО и тепловизор: 12.11.2026',
-};
-
-const SYMPTOMS: { id: SymptomId; label: string; urgent?: boolean }[] = [
-  { id: 'light', label: 'Мигает / не горит свет' },
-  { id: 'sockets', label: 'Не работает розетка' },
-  { id: 'spark', label: 'Искрит / греется', urgent: true },
-  { id: 'breaker', label: 'Выбивает автомат', urgent: true },
-];
-
-const ROOM_CIRCUITS: RoomCircuit[] = [
-  {
-    id: 'reception',
-    roomName: 'Ресепшен',
-    shield: 'ЩР-2',
-    shieldLocation: 'Коридор у переговорной (ниша у п. 12)',
-    lightLine: {
-      breaker: 'QF2 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5 · БАП',
-      description: 'Свет ресепшена и вывеска',
-    },
-    powerLine: {
-      breaker: 'QF1 · 1P 16 А (B)',
-      cable: 'ВВГнг-LS 3×2.5 · Дифавтомат 30 мА',
-      description: 'Стойка администратора и терминал',
-    },
-  },
-  {
-    id: 'openspace',
-    roomName: 'Опенспейс',
-    shield: 'ВРУ-1',
-    shieldLocation: 'Щитовая (п. 04, ключ у охраны)',
-    lightLine: {
-      breaker: 'QF3 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5',
-      description: 'LED-линии рабочей зоны',
-    },
-    powerLine: {
-      breaker: 'QF2 · 1P 16 А (B)',
-      cable: 'ВВГнг-LS 3×2.5 · Дифавтомат 30 мА',
-      description: 'Розеточные лючки (ряд А–Б)',
-    },
-  },
-  {
-    id: 'kitchen',
-    roomName: 'Кухня',
-    shield: 'ЩР-2',
-    shieldLocation: 'Коридор у переговорной (ниша у п. 12)',
-    lightLine: {
-      breaker: 'QF2 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5',
-      description: 'Освещение кухни и подсветка',
-    },
-    powerLine: {
-      breaker: 'QF4 · 1P 16 А (C)',
-      cable: 'ВВГнг-LS 3×2.5 · УЗО 10 мА',
-      description: 'Кофемашина, СВЧ и холодильник',
-    },
-  },
-  {
-    id: 'corridor',
-    roomName: 'Коридор',
-    shield: 'ЩР-2',
-    shieldLocation: 'Коридор у переговорной (ниша у п. 12)',
-    lightLine: {
-      breaker: 'QF6 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5 · БАП',
-      description: 'Коридорное и эвакуационное освещение',
-    },
-    powerLine: {
-      breaker: 'QF7 · 1P 16 А (B)',
-      cable: 'ВВГнг-LS 3×2.5 · Дифавтомат 30 мА',
-      description: 'Сервисные розетки и кулер',
-    },
-  },
-  {
-    id: 'meeting',
-    roomName: 'Переговорная',
-    shield: 'ЩР-2',
-    shieldLocation: 'Коридор у переговорной (ниша у п. 12)',
-    lightLine: {
-      breaker: 'QF2 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5',
-      description: 'Свет переговорной комнаты',
-    },
-    powerLine: {
-      breaker: 'QF5 · 1P 16 А (B)',
-      cable: 'ВВГнг-LS 3×2.5 · Дифавтомат 30 мА',
-      description: 'Лючок стола и ВКС-панель',
-    },
-  },
-  {
-    id: 'server',
-    roomName: 'Серверная',
-    shield: 'ВРУ-1',
-    shieldLocation: 'Щитовая (п. 04, ключ у охраны)',
-    lightLine: {
-      breaker: 'QF3 · 1P 10 А (B)',
-      cable: 'ВВГнг-LS 3×1.5',
-      description: 'Технический свет серверной',
-    },
-    powerLine: {
-      breaker: 'QF4 · 1P 25 А (C)',
-      cable: 'ВВГнг-LS 3×4.0 · УЗО 30 мА',
-      description: 'Ввод стойки, ИБП и кондиционер',
-    },
-  },
-];
 const buildTaskItem = (roomId: string, symptomId: SymptomId): TaskItem => {
-  const room = ROOM_CIRCUITS.find((r) => r.id === roomId) || ROOM_CIRCUITS;
-  const sym = SYMPTOMS.find((s) => s.id === symptomId) || SYMPTOMS;
+  const room = ROOM_CIRCUITS.find((r) => r.id === roomId) ?? DEFAULT_ROOM;
+  const sym = SYMPTOMS.find((s) => s.id === symptomId) ?? DEFAULT_SYMPTOM;
   const line = symptomId === 'light' ? room.lightLine : room.powerLine;
 
   return {
@@ -173,25 +50,37 @@ const buildTaskItem = (roomId: string, symptomId: SymptomId): TaskItem => {
   };
 };
 
+const formatDateRu = (isoDate: string) => {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  return y && m && d ? `${d}.${m}.${y}` : isoDate;
+};
 export const Demo: React.FC = () => {
   const [visitType, setVisitType] = useState<VisitType>('planned');
-  const [selectedRoomId, setSelectedRoomId] = useState<string>('meeting');
-  const [selectedSymptom, setSelectedSymptom] = useState<SymptomId>('spark');
+  const [preferredDate, setPreferredDate] = useState<string>('');
+  const [preferredTime, setPreferredTime] = useState<string>(DEFAULT_TIME_SLOT);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(DEFAULT_ROOM.id);
+  const [roomMenuOpen, setRoomMenuOpen] = useState<boolean>(false);
+  const [roomSearch, setRoomSearch] = useState<string>('');
+  const [selectedSymptom, setSelectedSymptom] = useState<SymptomId>(DEFAULT_SYMPTOM.id);
   const [noKeys, setNoKeys] = useState<boolean>(true);
+  const [comment, setComment] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
 
-  const [tasks, setTasks] = useState<TaskItem[]>(() => [
-    buildTaskItem('kitchen', 'light'),
-    buildTaskItem('corridor', 'sockets'),
-  ]);
+  const filteredRooms = useMemo(() => {
+    const q = roomSearch.trim().toLowerCase();
+    if (!q) return ROOM_CIRCUITS;
+    return ROOM_CIRCUITS.filter((r) => r.roomName.toLowerCase().includes(q));
+  }, [roomSearch]);
 
   const activeRoom = useMemo(
-    () => ROOM_CIRCUITS.find((r) => r.id === selectedRoomId) || ROOM_CIRCUITS,
+    () => ROOM_CIRCUITS.find((r) => r.id === selectedRoomId) ?? DEFAULT_ROOM,
     [selectedRoomId]
   );
 
   const activeSymptomObj = useMemo(
-    () => SYMPTOMS.find((s) => s.id === selectedSymptom) || SYMPTOMS,
+    () => SYMPTOMS.find((s) => s.id === selectedSymptom) ?? DEFAULT_SYMPTOM,
     [selectedSymptom]
   );
 
@@ -214,24 +103,38 @@ export const Demo: React.FC = () => {
     if (tasks.length > 0) return tasks;
     return [buildTaskItem(selectedRoomId, selectedSymptom)];
   }, [tasks, selectedRoomId, selectedSymptom]);
-
   const requestText = useMemo(() => {
     const header =
       visitType === 'emergency'
-        ? `🚨 СРОЧНЫЙ ВЫЕЗД (${OBJECT_INFO.name})`
-        : `📋 ПЛАНОВЫЙ ВЫЕЗД (${OBJECT_INFO.name})`;
+        ? `🚨 СРОЧНЫЙ ВЫЕЗД (в течение 24 ч) · ${OBJECT_INFO.name}`
+        : `📋 ПЛАНОВЫЙ ВЫЕЗД (по графику ТО) · ${OBJECT_INFO.name}`;
 
     const lines = effectiveTasks.map(
       (t, idx) =>
         `${idx + 1}. ${t.roomName} — ${t.symptomLabel}\n   └ Паспорт: ${t.shield} · ${t.breaker} (${t.cable})`
     );
 
-    const accessNote = noKeys
-      ? 'Доступ: ключей от щитовой на месте нет'
-      : 'Доступ: ключи от щитовой на месте';
+    const parts = [header];
 
-    return [header, '', ...lines, '', accessNote].join('\n');
-  }, [visitType, effectiveTasks, noKeys]);
+    if (visitType === 'planned') {
+      const dateLabel = preferredDate ? formatDateRu(preferredDate) : 'ближайший визит по графику';
+      parts.push(`Желаемое время: ${dateLabel}, ${preferredTime.toLowerCase()}`);
+    }
+
+    parts.push('', lines.join('\n\n'), '');
+    parts.push(
+      noKeys
+        ? 'Доступ: ключей от щитовой на месте нет'
+        : 'Доступ: ключи от щитовой на месте'
+    );
+
+    const trimmedComment = comment.trim();
+    if (trimmedComment) {
+      parts.push(`Комментарий: ${trimmedComment}`);
+    }
+
+    return parts.join('\n');
+  }, [visitType, preferredDate, preferredTime, effectiveTasks, noKeys, comment]);
 
   const maxHref = getMaxUrl();
   const telegramHref = getTelegramUrl(requestText);
@@ -245,6 +148,7 @@ export const Demo: React.FC = () => {
       setCopied(false);
     }
   };
+
   return (
     <section id="demo" className="py-20 bg-slate-950 text-slate-100 border-t border-slate-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -254,12 +158,12 @@ export const Demo: React.FC = () => {
             <span>Цифровой QR-паспорт объекта · Тариф «Бизнес»</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
-            Сборщик заявки по QR-коду: от аврала до планового ТО
+            Заявка по QR-коду
           </h2>
           <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
-            Администратор сканирует QR-код на ресепшен, выбирает режим выезда и набирает список
-            задач по помещениям. Система сама привязывает каждую точку к щиту и автомату из
-            паспорта объекта.
+            Отсканируйте QR-код на ресепшен или дверце щита, выберите режим выезда и отметьте
+            задачи по помещениям — система сама подставит в заявку нужный щит, номинал автомата и
+            кабель.
           </p>
         </div>
 
@@ -274,63 +178,172 @@ export const Demo: React.FC = () => {
                 {OBJECT_INFO.lastAudit}
               </span>
             </div>
-
-            {/* Компактный переключатель: Выезд: Плановый / Срочный */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                1. Выезд
-              </span>
-              <div className="inline-flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setVisitType('planned')}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    visitType === 'planned'
-                      ? 'bg-amber-500 text-slate-950'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <CalendarClock className="w-3.5 h-3.5" />
-                  <span>Плановый</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setVisitType('emergency')}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    visitType === 'emergency'
-                      ? 'bg-red-500 text-white'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <Siren className="w-3.5 h-3.5" />
-                  <span>Срочный</span>
-                </button>
+            <div className="mb-5 pb-4 border-b border-slate-800/70">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
+                    1. Выезд
+                  </span>
+                  <span className="text-xs text-slate-400 mt-0.5 block">
+                    {visitType === 'emergency'
+                      ? 'Реакция и выезд дежурного инженера в течение 24 часов'
+                      : 'Укажите удобную дату и время или оставьте по графику ТО'}
+                  </span>
+                </div>
+                <div className="inline-flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setVisitType('planned')}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      visitType === 'planned'
+                        ? 'bg-amber-500 text-slate-950'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    <span>Плановый</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisitType('emergency')}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      visitType === 'emergency'
+                        ? 'bg-red-500 text-white'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Siren className="w-3.5 h-3.5" />
+                    <span>Срочный</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Выбор помещения и симптома */}
+              {visitType === 'planned' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800/60">
+                  <div>
+                    <label
+                      htmlFor="preferred-date"
+                      className="block text-[11px] font-medium text-slate-400 mb-1"
+                    >
+                      Желаемая дата
+                    </label>
+                    <input
+                      id="preferred-date"
+                      type="date"
+                      value={preferredDate}
+                      onChange={(e) => setPreferredDate(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-100 outline-none transition-colors [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="preferred-time"
+                      className="block text-[11px] font-medium text-slate-400 mb-1"
+                    >
+                      Удобное время
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="preferred-time"
+                        value={preferredTime}
+                        onChange={(e) => setPreferredTime(e.target.value)}
+                        className="w-full appearance-none truncate bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-lg pl-3 pr-8 py-1.5 text-xs sm:text-sm text-slate-100 outline-none transition-colors"
+                      >
+                        {TIME_SLOTS.map((slot) => (
+                          <option key={slot} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="mb-5">
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
                 2. Помещение и проблема
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-                {ROOM_CIRCUITS.map((room) => {
-                  const isSelected = room.id === activeRoom.id;
-                  return (
-                    <button
-                      key={room.id}
-                      type="button"
-                      onClick={() => setSelectedRoomId(room.id)}
-                      className={`px-3 py-2.5 rounded-xl text-left text-xs sm:text-sm font-medium border transition-all ${
-                        isSelected
-                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-semibold'
-                          : 'bg-slate-950/90 text-slate-200 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      {room.roomName}
-                    </button>
-                  );
-                })}
+
+              <div className="relative mb-3">
+                <button
+                  type="button"
+                  onClick={() => setRoomMenuOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between gap-2 bg-slate-950 border border-slate-700 hover:border-amber-500/70 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs text-slate-400">Помещение:</span>
+                    <span className="font-semibold text-amber-400 truncate">
+                      {activeRoom.roomName}
+                    </span>
+                    <span className="text-xs font-mono text-slate-500">
+                      ({activeRoom.shield})
+                    </span>
+                  </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${
+                      roomMenuOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {roomMenuOpen && (
+                  <div className="absolute z-20 left-0 right-0 mt-1.5 bg-slate-950 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative p-2 border-b border-slate-800">
+                      <Search className="w-3.5 h-3.5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={roomSearch}
+                        onChange={(e) => setRoomSearch(e.target.value)}
+                        placeholder="Введите название помещения..."
+                        autoFocus
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500 rounded-lg pl-8 pr-7 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none"
+                      />
+                      {roomSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setRoomSearch('')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-48 overflow-y-auto divide-y divide-slate-800/60">
+                      {filteredRooms.length > 0 ? (
+                        filteredRooms.map((room) => {
+                          const isSelected = room.id === activeRoom.id;
+                          return (
+                            <button
+                              key={room.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedRoomId(room.id);
+                                setRoomMenuOpen(false);
+                                setRoomSearch('');
+                              }}
+                              className={`w-full flex items-center justify-between px-3.5 py-2 text-xs sm:text-sm text-left transition-colors ${
+                                isSelected
+                                  ? 'bg-amber-500/15 text-amber-300 font-semibold'
+                                  : 'text-slate-200 hover:bg-slate-900'
+                              }`}
+                            >
+                              <span>{room.roomName}</span>
+                              <span className="text-xs font-mono text-slate-500">
+                                {room.shield}
+                              </span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3.5 py-3 text-xs text-slate-500 text-center">
+                          Помещение не найдено
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
@@ -427,10 +440,29 @@ export const Demo: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-slate-500 py-3 mb-3 text-center border border-dashed border-slate-800 rounded-lg">
-                  Список пуст — в заявку пойдёт текущий выбор ({activeRoom.roomName})
+                <div className="text-xs text-slate-500 py-3 px-3 mb-3 text-center border border-dashed border-slate-800 rounded-lg">
+                  Если пунктов несколько — нажимайте «Добавить в список». Иначе в заявку пойдёт
+                  выбранное выше: {activeRoom.roomName}
                 </div>
               )}
+
+              <div className="mb-3 pt-2 border-t border-slate-800/80">
+                <label
+                  htmlFor="client-comment"
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1.5"
+                >
+                  <MessageSquarePlus className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Комментарий для инженера (необязательно)</span>
+                </label>
+                <input
+                  id="client-comment"
+                  type="text"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Например: захватите удлинитель 5 м на 3 розетки"
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors"
+                />
+              </div>
 
               <label className="flex items-center gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800/80 cursor-pointer select-none">
                 <input
@@ -444,7 +476,6 @@ export const Demo: React.FC = () => {
               </label>
             </div>
           </div>
-
           <div className="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between gap-2 text-sm font-medium text-white pb-4 mb-5 border-b border-slate-800">
               <span>Готовая ведомость для инженера</span>
@@ -455,7 +486,7 @@ export const Demo: React.FC = () => {
                     : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                 }`}
               >
-                {visitType === 'emergency' ? 'СРОЧНЫЙ ВЫЕЗД' : 'ПЛАНОВЫЙ ВЫЕЗД'}
+                {visitType === 'emergency' ? 'СРОЧНЫЙ · ДО 24 Ч' : 'ПЛАНОВЫЙ ВЫЕЗД'}
               </span>
             </div>
 
