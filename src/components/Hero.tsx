@@ -86,14 +86,14 @@ export default function Hero() {
 
           <h1 className="mt-7 text-balance text-4xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
             Персональный инженер-электрик и порядок в электрохозяйстве{' '}
-            <span className="text-amber-400">для вашего офиса</span>
+            <span className="text-amber-400">вашего офиса</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-zinc-400 sm:text-lg">
             Абонентское обслуживание по подписке, ведение документации по ЭХ, быстрый
-            тепловизионный аудит без лишней бюрократии и интерактивные SVG-карты помещений
-            с заявками по QR-коду. Ваш объект ведет один закрепленный инженер-электрик,
-            который знает каждый автомат в вашем щите.
+            тепловизионный аудит без лишней бюрократии и цифровой QR-паспорт объекта для
+            вызова инженера. Ваш объект ведет закрепленный
+            инженер-электрик, который знает каждый автомат в вашем щите.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -110,7 +110,7 @@ export default function Hero() {
               href="#demo"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-7 py-4 text-base font-semibold text-zinc-100 backdrop-blur-sm transition-all hover:border-amber-500/40 hover:text-amber-400 sm:w-auto"
             >
-              Попробовать демо SVG-карты
+              Попробовать QR-заявку
               <ArrowDown className="h-4 w-4" />
             </a>
           </div>

@@ -10,7 +10,7 @@ interface NavItem {
 const NAV: readonly NavItem[] = [
   { href: '#approach', label: 'Подход Win-Win' },
   { href: '#pricing', label: 'Тарифы и зоны' },
-  { href: '#demo', label: 'Демо SVG-карты' },
+  { href: '#demo', label: 'QR-заявка' },
   { href: '#faq', label: 'FAQ' },
 ];
 

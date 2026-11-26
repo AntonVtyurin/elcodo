@@ -106,7 +106,7 @@ export const Demo: React.FC = () => {
   const requestText = useMemo(() => {
     const header =
       visitType === 'emergency'
-        ? `🚨 СРОЧНЫЙ ВЫЕЗД (в течение 24 ч) · ${OBJECT_INFO.name}`
+        ? `🚨 ВНЕПЛАНОВЫЙ ВЫЕЗД (в течение 24 ч) · ${OBJECT_INFO.name}`
         : `📋 ПЛАНОВЫЙ ВЫЕЗД (по графику ТО) · ${OBJECT_INFO.name}`;
 
     const lines = effectiveTasks.map(
@@ -158,7 +158,7 @@ export const Demo: React.FC = () => {
             <span>Цифровой QR-паспорт объекта · Тариф «Бизнес»</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
-            Заявка по QR-коду
+            QR-заявка
           </h2>
           <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
             Отсканируйте QR-код на ресепшен или дверце щита, выберите режим выезда и отметьте
@@ -213,7 +213,7 @@ export const Demo: React.FC = () => {
                     }`}
                   >
                     <Siren className="w-3.5 h-3.5" />
-                    <span>Срочный</span>
+                    <span>Внеплановый</span>
                   </button>
                 </div>
               </div>
@@ -459,7 +459,7 @@ export const Demo: React.FC = () => {
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Например: захватите удлинитель 5 м на 3 розетки"
+                  placeholder="Например: просьба приехать в течение 3 часов"
                   className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors"
                 />
               </div>
@@ -480,13 +480,13 @@ export const Demo: React.FC = () => {
             <div className="flex items-center justify-between gap-2 text-sm font-medium text-white pb-4 mb-5 border-b border-slate-800">
               <span>Готовая ведомость для инженера</span>
               <span
-                className={`text-[11px] font-mono px-2 py-0.5 rounded ${
+                className={`whitespace-nowrap shrink-0 text-[11px] font-mono px-2 py-0.5 rounded ${
                   visitType === 'emergency'
                     ? 'bg-red-500/15 text-red-300 border border-red-500/30'
                     : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                 }`}
               >
-                {visitType === 'emergency' ? 'СРОЧНЫЙ · ДО 24 Ч' : 'ПЛАНОВЫЙ ВЫЕЗД'}
+                {visitType === 'emergency' ? 'ВНЕПЛАНОВЫЙ · ДО 24Ч' : 'ПЛАНОВЫЙ ВЫЕЗД'}
               </span>
             </div>
 
