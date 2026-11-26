@@ -1,284 +1,524 @@
-import { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Shield,
-  Plug,
-  Lightbulb,
-  Coffee,
-  Server,
   Zap,
+  ShieldCheck,
+  FileSpreadsheet,
   Send,
-  BadgeCheck,
-  Lock,
+  Copy,
+  Check,
+  MapPin,
+  Cpu,
+  AlertCircle,
+  QrCode,
+  Layers,
+  ChevronDown,
 } from 'lucide-react';
-import SectionHeading from './SectionHeading';
+import { getMaxUrl, getTelegramUrl } from '../config/site';
 
-interface Point {
-  id: string;
-  name: string;
+export type NetworkType = 'panel' | 'power' | 'light';
+
+export interface NodePassport {
+  code: string;
+  shield: string;
+  network: NetworkType;
   zone: string;
-  group: string;
+  line: string;
   breaker: string;
-  status: string;
-  statusOk: boolean;
-  x: number; // проценты плана
-  y: number;
-  icon: typeof Plug;
+  cableAndRcd: string;
+  defaultIssue: string;
 }
 
-const POINTS: Point[] = [
-  { id: 'shield1', name: 'Щит №1 (Вводной)', zone: 'Приемная', group: 'Ввод', breaker: 'QF1 · 63 А', status: 'Норма', statusOk: true, x: 8, y: 42, icon: Shield },
-  { id: 'socket14', name: 'Розетка #14', zone: 'Кабинет 2', group: 'Группа розеток', breaker: 'QF3 · 16 А', status: 'Нагрев контакта', statusOk: false, x: 62, y: 32, icon: Plug },
-  { id: 'light04', name: 'Светильник #04', zone: 'Переговорная', group: 'Освещение', breaker: 'QF4 · 10 А', status: 'Норма', statusOk: true, x: 62, y: 76, icon: Lightbulb },
-  { id: 'coffee02', name: 'Линия кофемашины #02', zone: 'Кухня', group: 'Кухня', breaker: 'QF5 · 25 А', status: 'Высокая нагрузка', statusOk: false, x: 30, y: 76, icon: Coffee },
-  { id: 'rack01', name: 'Серверная стойка #01', zone: 'Серверная', group: 'ИБП / серверная', breaker: 'QF2 · 32 А', status: 'Норма', statusOk: true, x: 30, y: 12, icon: Server },
-  { id: 'socket08', name: 'Розетка #08', zone: 'Кабинет 1', group: 'Группа розеток', breaker: 'QF6 · 16 А', status: 'Норма', statusOk: true, x: 8, y: 12, icon: Zap },
+const COMMON_ISSUES = [
+  'Тепловизор и протяжка клемм',
+  'Выбивает автомат или УЗО',
+  'Неисправность розетки / нагрев',
+  'Мерцание света / тест БАП',
+  'Балансировка фаз и заземление',
+  'Автоматика вентиляции / кровли',
 ];
 
-const ISSUES = ['Нет питания', 'Греется / искрит', 'Мигает свет'];
-
-const ROOMS = [
-  { label: 'Серверная', x: 6, y: 4, w: 22, h: 20 },
-  { label: 'Кабинет 1', x: 6, y: 26, w: 22, h: 32 },
-  { label: 'Приемная', x: 6, y: 60, w: 22, h: 36 },
-  { label: 'Кухня', x: 30, y: 60, w: 34, h: 36 },
-  { label: 'Переговорная', x: 52, y: 58, w: 42, h: 38 },
-  { label: 'Кабинет 2', x: 30, y: 4, w: 64, h: 52 },
+const NODES_DATA: NodePassport[] = [
+  {
+    code: 'ВРУ-1',
+    shield: 'ВРУ-1',
+    network: 'panel',
+    zone: 'Электрощитовая (ввод)',
+    line: 'Вводной узел и учёт электроэнергии',
+    breaker: 'QF1 · 3P 63 А (характеристика C)',
+    cableAndRcd: 'ВВГнг-LS 5×16 · УЗМ-51М / ОПН',
+    defaultIssue: 'Тепловизор и протяжка клемм',
+  },
+  {
+    code: 'ЩР-2',
+    shield: 'ЩР-2',
+    network: 'panel',
+    zone: 'Опенспейс / Переговорная (распред. щит)',
+    line: 'Групповой щит крыла Б и наружных потребителей',
+    breaker: 'QS1 · 3P 40 А (вводной рубильник)',
+    cableAndRcd: 'ВВГнг-LS 5×10 · Кросс-модуль и шины N/PE',
+    defaultIssue: 'Тепловизор и протяжка клемм',
+  },
+  {
+    code: 'Гр. 1',
+    shield: 'ВРУ-1',
+    network: 'power',
+    zone: 'Опенспейс · Рабочие места',
+    line: 'Розеточная сеть (ряд А–Б, 14 постов)',
+    breaker: 'QF3 · 1P 16 А (характеристика B)',
+    cableAndRcd: 'ВВГнг-LS 3×2.5 · Дифавтомат 30 мА (тип A)',
+    defaultIssue: 'Выбивает автомат или УЗО',
+  },
+  {
+    code: 'Гр. 2',
+    shield: 'ВРУ-1',
+    network: 'light',
+    zone: 'Опенспейс · Основная зона',
+    line: 'Рабочее и дежурное LED-освещение',
+    breaker: 'QF4 · 1P 10 А (характеристика B)',
+    cableAndRcd: 'ВВГнг-LS 3×1.5 · Автоматика управления светом',
+    defaultIssue: 'Мерцание света / тест БАП',
+  },
+  {
+    code: 'Гр. 3',
+    shield: 'ВРУ-1',
+    network: 'power',
+    zone: 'Серверная и слаботочный узел',
+    line: 'Выделенная линия стойки и ИБП',
+    breaker: 'QF5 · 1P 25 А (характеристика C)',
+    cableAndRcd: 'ВВГнг-LS 3×4.0 · Селективное УЗО 30 мА',
+    defaultIssue: 'Балансировка фаз и заземление',
+  },
+  {
+    code: 'Гр. 4',
+    shield: 'ЩР-2',
+    network: 'power',
+    zone: 'Кухня / Кофе-пойнт',
+    line: 'Розеточная группа (кофемашина, СВЧ)',
+    breaker: 'QF2 · 1P 16 А (характеристика C)',
+    cableAndRcd: 'ВВГнг-LS 3×2.5 · УЗО 10 мА (мокрая зона)',
+    defaultIssue: 'Неисправность розетки / нагрев',
+  },
+  {
+    code: 'Гр. 5',
+    shield: 'ЩР-2',
+    network: 'light',
+    zone: 'Переговорная и коридор',
+    line: 'Основное и аварийное освещение (БАП)',
+    breaker: 'QF3 · 1P 10 А (характеристика B)',
+    cableAndRcd: 'ВВГнг-LS 3×1.5 · Контроль блоков аварийного питания',
+    defaultIssue: 'Мерцание света / тест БАП',
+  },
+  {
+    code: 'Гр. 6',
+    shield: 'ЩР-2',
+    network: 'power',
+    zone: 'Кровля / Наружный блок',
+    line: 'Приточная вентиляция и обогрев водостоков',
+    breaker: 'QF4 · 3P 20 А (характеристика C)',
+    cableAndRcd: 'ВВГнг-LS 5×4.0 · УЗО 30 мА + контактор',
+    defaultIssue: 'Автоматика вентиляции / кровли',
+  },
 ];
 
-export default function Demo() {
-  const [selectedId, setSelectedId] = useState('socket14');
-  const [issue, setIssue] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+const normalizeCode = (raw: string) =>
+  raw.replace(/\u00a0/g, ' ').replace(/\s+/g, '').toLowerCase();
+export const Demo: React.FC = () => {
+  const [svgMarkup, setSvgMarkup] = useState<string>('');
+  const [selectedCode, setSelectedCode] = useState<string>('ВРУ-1');
+  const [selectedIssue, setSelectedIssue] = useState<string>(COMMON_ISSUES[0]);
+  const [networkFilter, setNetworkFilter] = useState<'all' | 'power' | 'light'>('all');
+  const [shieldFilter, setShieldFilter] = useState<string>('all');
+  const [copied, setCopied] = useState(false);
 
-  const selected = useMemo(
-    () => POINTS.find((p) => p.id === selectedId) ?? POINTS[0],
-    [selectedId]
+  const svgContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const nodeMap = useMemo(() => {
+    const map = new Map<string, NodePassport>();
+    NODES_DATA.forEach((n) => map.set(normalizeCode(n.code), n));
+    return map;
+  }, []);
+
+  const shieldsList = useMemo(
+    () => Array.from(new Set(NODES_DATA.map((n) => n.shield))),
+    []
   );
 
-  const pick = (id: string) => {
-    setSelectedId(id);
-    setIssue(null);
-    setSent(false);
-  };
+  const activeNode =
+    NODES_DATA.find((n) => normalizeCode(n.code) === normalizeCode(selectedCode)) ||
+    NODES_DATA[0];
 
-  const send = () => {
-    if (!issue) return;
-    setSent(true);
+  useEffect(() => {
+    const url = `${import.meta.env.BASE_URL}plans/demo-office.svg`;
+    fetch(url)
+      .then((res) => (res.ok ? res.text() : Promise.reject()))
+      .then((text) => setSvgMarkup(text))
+      .catch(() => setSvgMarkup(''));
+  }, []);
+
+  useEffect(() => {
+    const container = svgContainerRef.current;
+    if (!container || !svgMarkup) return;
+
+    const svgEl = container.querySelector('svg');
+    if (!svgEl) return;
+
+    svgEl.removeAttribute('width');
+    svgEl.removeAttribute('height');
+    svgEl.classList.add('w-full', 'h-auto', 'block', 'select-none');
+
+    const shapes = Array.from(svgEl.querySelectorAll('rect, ellipse, circle')).filter(
+      (el) => {
+        const w = parseFloat(el.getAttribute('width') || '0');
+        const rx = parseFloat(el.getAttribute('rx') || el.getAttribute('r') || '0');
+        return (w > 0 && w < 115) || (rx > 0 && rx < 60);
+      }
+    );
+
+    const getShapeCenter = (el: Element) => {
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'rect') {
+        const x = parseFloat(el.getAttribute('x') || '0');
+        const y = parseFloat(el.getAttribute('y') || '0');
+        const w = parseFloat(el.getAttribute('width') || '0');
+        const h = parseFloat(el.getAttribute('height') || '0');
+        return { cx: x + w / 2, cy: y + h / 2 };
+      }
+      return {
+        cx: parseFloat(el.getAttribute('cx') || '0'),
+        cy: parseFloat(el.getAttribute('cy') || '0'),
+      };
+    };
+
+    const textEls = Array.from(svgEl.querySelectorAll('text'));
+    const cleanups: Array<() => void> = [];
+
+    textEls.forEach((textEl) => {
+      const rawText = (textEl.textContent || '').trim();
+      const matchedNode = nodeMap.get(normalizeCode(rawText));
+      if (!matchedNode) return;
+
+      const tx = parseFloat(textEl.getAttribute('x') || '0');
+      const ty = parseFloat(textEl.getAttribute('y') || '0');
+
+      let bestShape: SVGElement | null = null;
+      let minDist = Infinity;
+      shapes.forEach((sh) => {
+        const { cx, cy } = getShapeCenter(sh);
+        const dist = Math.hypot(cx - tx, cy - ty);
+        if (dist < minDist) {
+          minDist = dist;
+          bestShape = sh as SVGElement;
+        }
+      });
+
+      const labelGroup = (textEl.closest('g') || textEl) as SVGElement;
+      const htmlLabels = Array.from(
+        labelGroup.querySelectorAll<HTMLElement>('foreignObject div')
+      );
+
+      const matchesNetwork =
+        matchedNode.network === 'panel' ||
+        networkFilter === 'all' ||
+        matchedNode.network === networkFilter;
+
+      const matchesShield =
+        shieldFilter === 'all' || matchedNode.shield === shieldFilter;
+
+      const isVisible = matchesNetwork && matchesShield;
+      const isSelected =
+        normalizeCode(matchedNode.code) === normalizeCode(activeNode.code);
+
+      const textColor = isSelected
+        ? '#0f172a'
+        : matchedNode.network === 'panel'
+          ? '#fbbf24'
+          : '#e2e8f0';
+
+      const targets: SVGElement[] = [labelGroup];
+      if (bestShape) {
+        targets.push(bestShape);
+        if (isSelected) {
+          (bestShape as SVGElement).setAttribute('fill', '#f59e0b');
+          (bestShape as SVGElement).setAttribute('stroke', '#fde68a');
+        } else if (matchedNode.network === 'panel') {
+          (bestShape as SVGElement).setAttribute('fill', '#1e293b');
+          (bestShape as SVGElement).setAttribute('stroke', '#f59e0b');
+        } else {
+          (bestShape as SVGElement).setAttribute('fill', '#1e293b');
+          (bestShape as SVGElement).setAttribute('stroke', '#64748b');
+        }
+      }
+
+      textEl.setAttribute('fill', textColor);
+      htmlLabels.forEach((div) => {
+        div.style.color = textColor;
+        div.style.backgroundColor = 'transparent';
+      });
+
+      const onClick = () => {
+        setSelectedCode(matchedNode.code);
+        setSelectedIssue(matchedNode.defaultIssue);
+      };
+
+      targets.forEach((el) => {
+        el.style.cursor = 'pointer';
+        el.style.transition = 'opacity 0.2s ease';
+        el.style.opacity = isVisible ? '1' : '0.14';
+        el.style.pointerEvents = isVisible ? 'all' : 'none';
+        el.addEventListener('click', onClick);
+        cleanups.push(() => el.removeEventListener('click', onClick));
+      });
+    });
+
+    return () => {
+      cleanups.forEach((fn) => fn());
+    };
+  }, [svgMarkup, activeNode.code, networkFilter, shieldFilter, nodeMap]);
+  const requestText = [
+    `Заявка с паспорта объекта (Элкодо):`,
+    `• Узел: ${activeNode.code} (${activeNode.shield}) — ${activeNode.zone}`,
+    `• Линия: ${activeNode.line}`,
+    `• Защита: ${activeNode.breaker} (${activeNode.cableAndRcd})`,
+    `• Задача: ${selectedIssue}`,
+  ].join('\n');
+
+  const maxHref = getMaxUrl();
+  const telegramHref = getTelegramUrl(requestText);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(requestText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
-    <section id="demo" className="relative py-20 lg:py-28">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
-        <SectionHeading
-          title="Как работают заявки по QR-коду на интерактивной карте"
-          subtitle="Сотрудник наводит камеру на QR-наклейку у щитка, выбирает точку на плане офиса — и инженер мгновенно получает точный номер автомата в Telegram."
-        />
-
-        <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* SVG-план офиса */}
-          <div className="glass-card overflow-hidden rounded-2xl p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-mono text-xs tracking-widest text-zinc-500">
-                PLAN // OFFICE-01 · SVG
-              </span>
-              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-amber-400">
-                <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-amber-400" />
-                LIVE
-              </span>
-            </div>
-
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#0C0E16]">
-              {/* инженерная сетка */}
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-[0.07]"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)',
-                  backgroundSize: '28px 28px',
-                }}
-              />
-
-              <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden>
-                {ROOMS.map((r) => (
-                  <g key={r.label}>
-                    <rect
-                      x={r.x}
-                      y={r.y}
-                      width={r.w}
-                      height={r.h}
-                      rx="1.4"
-                      fill="rgba(255,255,255,0.025)"
-                      stroke="rgba(255,255,255,0.18)"
-                      strokeWidth="0.35"
-                    />
-                  </g>
-                ))}
-              </svg>
-
-              {/* подписи комнат */}
-              {ROOMS.map((r) => (
-                <span
-                  key={r.label}
-                  className="pointer-events-none absolute font-mono text-[9px] uppercase tracking-widest text-zinc-500 sm:text-[10px]"
-                  style={{ left: `${r.x + 1.5}%`, top: `${r.y + 1.5}%` }}
-                >
-                  {r.label}
-                </span>
-              ))}
-
-              {/* точки */}
-              {POINTS.map((p) => {
-                const active = p.id === selectedId;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => pick(p.id)}
-                    aria-label={p.name}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none"
-                    style={{ left: `${p.x + 4}%`, top: `${p.y + 4}%` }}
-                  >
-                    <span
-                      className={`relative grid h-8 w-8 place-items-center rounded-full border transition-all duration-300 sm:h-9 sm:w-9 ${
-                        active
-                          ? 'border-amber-400 bg-amber-500/25 text-amber-300 pulse-dot'
-                          : 'border-white/20 bg-[#11131C]/90 text-zinc-400 hover:border-amber-500/50 hover:text-amber-400'
-                      }`}
-                    >
-                      <p.icon className="h-4 w-4" strokeWidth={2} />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <p className="mt-4 text-xs leading-relaxed text-zinc-500">
-              Нажмите на точку на плане — справа откроются данные точки и симулятор заявки.
-            </p>
+    <section id="demo" className="py-20 bg-slate-950 text-slate-100 border-t border-slate-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium mb-4">
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Цифровой паспорт щита · Пример после аудита</span>
           </div>
-
-          {/* Панель инспектора */}
-          <div className="flex flex-col gap-6">
-            <div className="glass-card rounded-2xl p-6 lg:p-7">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-mono text-xs tracking-widest text-zinc-500">ТОЧКА ОБЪЕКТА</p>
-                  <h3 className="mt-1.5 text-xl font-bold text-white">{selected.name}</h3>
-                </div>
-                <span
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                    selected.statusOk
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                      : 'border-amber-500/40 bg-amber-500/10 text-amber-400'
-                  }`}
-                >
-                  {selected.status}
-                </span>
-              </div>
-
-              <dl className="mt-5 grid grid-cols-2 gap-3 font-mono text-sm">
-                {[
-                  ['Зона', selected.zone],
-                  ['Группа в щите', selected.group],
-                  ['Автомат', selected.breaker],
-                  ['QR-токен', `a3f-…-${selected.id.slice(0, 4).toUpperCase()}`],
-                ].map(([k, v]) => (
-                  <div key={k} className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5">
-                    <dt className="text-[11px] uppercase tracking-wider text-zinc-500">{k}</dt>
-                    <dd className="mt-0.5 text-zinc-200">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              <p className="mt-6 font-mono text-xs tracking-widest text-zinc-500">ТИП ПРОБЛЕМЫ</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {ISSUES.map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => {
-                      setIssue(i);
-                      setSent(false);
-                    }}
-                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-                      issue === i
-                        ? 'border-amber-500/60 bg-amber-500/10 text-amber-400'
-                        : 'border-white/10 bg-white/[0.03] text-zinc-300 hover:border-white/25'
-                    }`}
-                  >
-                    {i}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={send}
-                disabled={!issue}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3.5 text-sm font-bold text-[#090A0F] shadow-[0_6px_24px_rgba(245,158,11,0.3)] transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-              >
-                <Send className="h-4 w-4" />
-                Отправить тестовую заявку
-              </button>
-              {!issue && (
-                <p className="mt-2 text-center text-xs text-zinc-500">
-                  Сначала выберите тип проблемы
-                </p>
-              )}
-            </div>
-
-            {/* Симулятор Telegram */}
-            {sent && issue && (
-              <div className="glass-card fade-up rounded-2xl p-6 lg:p-7">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[#2AABEE]/20 text-[#2AABEE]">
-                      <Send className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold text-white">Elcodo · Заявки</p>
-                      <p className="text-xs text-zinc-500">Telegram-бот объекта</p>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs text-zinc-500">сейчас</span>
-                </div>
-
-                <div className="mt-4 rounded-xl rounded-tl-sm border border-white/[0.08] bg-white/[0.04] p-4 text-sm leading-relaxed text-zinc-200">
-                  <p className="font-mono text-xs text-amber-400">⚡ НОВАЯ ЗАЯВКА ПО QR</p>
-                  <p className="mt-2">
-                    <span className="text-zinc-500">Точка:</span> {selected.name}
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">Зона:</span> {selected.zone}
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">Автомат:</span> {selected.breaker} ({selected.group})
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">Проблема:</span> {issue}
-                  </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400">
-                    <BadgeCheck className="h-3.5 w-3.5" />
-                    Заявка доставлена закрепленному инженеру
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
+            Интерактивный паспорт объекта и быстрая заявка
+          </h2>
+          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+            После обследования мы оцифровываем однолинейную схему и привязываем каждый автомат к
+            помещению. Сотруднику на месте не нужно разбираться в электротехнике — достаточно
+            выбрать зону на плане и отправить готовую сводку инженеру.
+          </p>
         </div>
 
-        {/* Плашка безопасности */}
-        <div className="glass-card mt-8 flex items-start gap-4 rounded-2xl p-6">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
-          <p className="text-sm leading-relaxed text-zinc-400">
-            <span className="font-semibold text-zinc-200">Безопасность данных:</span> карта
-            объекта не индексируется поисковиками, не содержит конфиденциальных названий и
-            открывается только по уникальному крипто-токену (UUID) с QR-наклейки с проверкой
-            PIN-кода.
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                <FileSpreadsheet className="w-4 h-4 text-amber-400" />
+                <span>План-схема: Офис БЦ «Петровский», 3 этаж</span>
+              </div>
+              <span className="text-xs font-mono text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded">
+                DWG / SVG · Актуализировано
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs">
+              <div className="inline-flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                <Layers className="w-3.5 h-3.5 text-slate-400 ml-1.5 mr-1" />
+                {(
+                  [
+                    { id: 'all', label: 'Все сети' },
+                    { id: 'power', label: 'Розетки и сила' },
+                    { id: 'light', label: 'Освещение' },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setNetworkFilter(tab.id)}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                      networkFilter === tab.id
+                        ? 'bg-amber-500 text-slate-950'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="inline-flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShieldFilter('all')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                    shieldFilter === 'all'
+                      ? 'bg-slate-800 text-amber-400'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Все щиты
+                </button>
+                {shieldsList.map((sh) => (
+                  <button
+                    key={sh}
+                    type="button"
+                    onClick={() => setShieldFilter(sh)}
+                    className={`px-2.5 py-1 rounded-md font-mono font-medium transition-colors ${
+                      shieldFilter === sh
+                        ? 'bg-slate-800 text-amber-400'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {sh}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative bg-slate-950 border border-slate-800/90 rounded-xl p-4 mb-5">
+              {svgMarkup ? (
+                <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: svgMarkup }} />
+              ) : (
+                <div className="py-16 text-center text-xs text-slate-500 font-mono">
+                  Поместите экспортированный файл в public/plans/demo-office.svg
+                </div>
+              )}
+            </div>
+            <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold">
+                  Паспортные данные · {activeNode.code} ({activeNode.shield})
+                </span>
+                <span className="text-xs text-slate-400">Нажмите на метку на схеме</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm">
+                <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Зона обслуживания</span>
+                  </div>
+                  <div className="font-medium text-slate-100">{activeNode.zone}</div>
+                </div>
+
+                <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Группа / линия</span>
+                  </div>
+                  <div className="font-medium text-slate-100">{activeNode.line}</div>
+                </div>
+
+                <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <Cpu className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Автомат в щите</span>
+                  </div>
+                  <div className="font-mono text-xs sm:text-sm text-amber-300">
+                    {activeNode.breaker}
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Кабель и дифзащита</span>
+                  </div>
+                  <div className="font-mono text-xs sm:text-sm text-slate-200">
+                    {activeNode.cableAndRcd}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center gap-2 text-sm font-medium text-white pb-4 mb-5 border-b border-slate-800">
+              <AlertCircle className="w-4 h-4 text-amber-400" />
+              <span>Формирование заявки дежурному инженеру</span>
+            </div>
+
+            <div className="mb-5">
+              <label
+                htmlFor="issue-select"
+                className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-2"
+              >
+                1. Выберите задачу или неисправность
+              </label>
+              <div className="relative">
+                <select
+                  id="issue-select"
+                  value={selectedIssue}
+                  onChange={(e) => setSelectedIssue(e.target.value)}
+                  className="w-full appearance-none truncate bg-slate-950 border border-slate-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-slate-100 outline-none transition-colors"
+                >
+                  {COMMON_ISSUES.map((issue) => (
+                    <option key={issue} value={issue}>
+                      {issue}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                  2. Готовая сводка для отправки
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Скопировано</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Копировать текст</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {requestText}
+              </pre>
+            </div>
+
+            <div className="space-y-3">
+              <a
+                href={maxHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-sm transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                <span>Отправить заявку в MAX</span>
+              </a>
+
+              <a
+                href={telegramHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-sm border border-slate-700 transition-colors"
+              >
+                <span>Отправить в Telegram</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default Demo;
