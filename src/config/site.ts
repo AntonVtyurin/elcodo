@@ -13,7 +13,7 @@ export const SITE_CONFIG = {
   email: 'elcodo@bk.ru',
   messengers: {
     telegramUsername: 'anton_vtyurin',      // <-- Замени на свой ник в Telegram без @
-    maxUrl: 'https://max.ru/c/-75227121870179/AaIKx8ZiUXQ', // <-- Замени на свою прямую ссылку в MAX
+    maxUrl: 'https://max.ru/se15172362_biz', // <-- Замени на свою прямую ссылку в MAX
   },
   requisites: {
     entityName: 'Плательщик НПД Втюрин Антон Юрьевич', // <-- Впиши свои ФИО
